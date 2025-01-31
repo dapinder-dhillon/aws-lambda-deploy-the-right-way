@@ -1,0 +1,93 @@
+library 'tiobii-pipeline-shared-libraries@v3.10.1'
+
+pipeline {
+    agent { label 'docker-t2micro' }
+
+    environment {
+        ENV_NAME = 'labs'
+        ACCOUNT_ENV_NAME = 'nonprod'
+        APP_NAME = 'tdmp-aws-py-file-distribution-lambda'
+        APP_TYPE = 'resource'
+    }
+
+    options {
+        ansiColor('xterm')
+    }
+
+    stages {
+        stage('terraform-apply-lambda-layer') {
+            steps {
+               dir('terraform/lambda_dependencies_layer') {
+                script {
+                    withEnv(["PATH=${tool name: 'terraform_1.2.5', type: 'com.cloudbees.jenkins.plugins.customtools.CustomTool'}:${PATH}"]) {
+                        sh """
+                            TF_IN_AUTOMATION=true terraform get -update=true
+                            TF_IN_AUTOMATION=true terraform init -input=false -backend-config=terraform.${ACCOUNT_ENV_NAME}.backend-config.tfvars
+                            TF_IN_AUTOMATION=true terraform apply -var-file=terraform.${ACCOUNT_ENV_NAME}.tfvars -auto-approve -input=false
+                        """
+                        }
+                    }
+                }
+            }
+        }
+        stage('terraform-apply-lambda') {
+            steps {
+               dir('terraform') {
+                script {
+                    withEnv(["PATH=${tool name: 'terraform_1.2.5', type: 'com.cloudbees.jenkins.plugins.customtools.CustomTool'}:${PATH}"]) {
+                        sh """
+                            TF_IN_AUTOMATION=true terraform get -update=true
+                            TF_IN_AUTOMATION=true terraform init -input=false -backend-config=terraform.${ENV_NAME}.backend-config.tfvars
+                            TF_IN_AUTOMATION=true terraform apply -var-file=terraform.${ENV_NAME}.tfvars -auto-approve -input=false
+                        """
+                        }
+                    }
+                }
+            }
+        }
+        stage('release') {
+            agent { label 'tdmp' }
+            when {
+                branch 'main'
+            }
+            steps {
+                withCredentials([string(credentialsId: 'github-token-release', variable: 'GITHUB_TOKEN')]) {
+                    sh '''
+                        export GIT_BRANCH=main
+                        export GH_TOKEN=$GITHUB_TOKEN
+                        npx semantic-release
+                    '''
+                }
+            }
+        }
+        stage('manage-release') {
+            agent { label 'tdmp' }
+            when {
+                branch 'main'
+            }
+            steps {
+                script {
+                    GIT_LATEST_TAG=sh(returnStdout: true, script: 'git describe --tags --abbrev=0').trim()
+                }
+                sshagent(credentials: ['jenkins-scm-key']) {
+                    manage_release(
+                        'app_name'  : APP_NAME,
+                        'app_type'  : APP_TYPE,
+                        'env'       : ENV_NAME,
+                        'tag'       : GIT_LATEST_TAG,
+                        'job_url'   : BUILD_URL
+                    )
+                }
+            }
+        }
+    }
+    post {
+        failure {
+            script {
+                if (env.BRANCH_NAME =='main') {
+                    slackSend(channel: 'ifp-alerts-nonprod', color: '#FF0000', message: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "lambdafiledistribution"
+version = "0.0.0"
+description = "lambda file distribution"
+authors = ["TIODI <TIODI@elsevier.com>"]
+readme = "README.md"
+classifiers = [
+    "Programming Language :: Python :: 3.8",
+    "Operating System :: OS Independent"
+]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+requests = "2.27.1"
+
+[tool.poetry.dev-dependencies]
+boto3 = "^1.20.16"
+
+[tool.poetry.urls]
+"Repository" = "https://github.com/elsevier-bts/tdmp-aws-pylambda-file-distribution"
+"Homepage" = "https://github.com/elsevier-bts/tdmp-aws-pylambda-file-distribution"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

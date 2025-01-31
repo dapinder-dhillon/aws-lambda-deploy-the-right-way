@@ -1,0 +1,14 @@
+formatter: markdown table
+sections:
+  hide:
+    - providers
+sort:
+  enabled: true
+  by:
+    - required
+settings:
+  color: false
+  escape: false
+  indent: 4
+  required: true
+  sensitive: true

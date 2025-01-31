@@ -1,0 +1,22 @@
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.4.0
+    hooks:
+    -   id: check-yaml
+    -   id: end-of-file-fixer
+    -   id: trailing-whitespace
+-   repo: https://github.com/gruntwork-io/pre-commit
+    rev: v0.1.12
+    hooks:
+    -   id: shellcheck
+-   repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.76.0
+    hooks:
+    -   id: terraform_fmt
+    -   id: terraform_docs
+    -   id: terraform_validate
+-   repo: https://github.com/zricethezav/gitleaks
+    rev: v7.5.0
+    hooks:
+    -   id: gitleaks
+        args: [--path=., --unstaged, --report=./gitleaks-report.json]
