@@ -1,6 +1,6 @@
 resource "aws_ssm_parameter" "alerts_slack_token" {
   name = join("-", [
-    var.file_distribution_lambda_name,
+    var.create_s3_presigned_url_lambda_name,
     var.environment,
   "slack-token"])
   description = "Slack API token, for the slack."

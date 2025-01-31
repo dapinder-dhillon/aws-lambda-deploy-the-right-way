@@ -3,9 +3,9 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
 
   lambda_function {
     id = join("-", [
-      var.file_distribution_lambda_name,
+      var.create_s3_presigned_url_lambda_name,
     var.environment])
-    lambda_function_arn = aws_lambda_function.file_distribution_function.arn
+    lambda_function_arn = aws_lambda_function.create_s3_presigned_url_function.arn
     events              = ["s3:ObjectCreated:*"]
   }
 

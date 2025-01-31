@@ -27,7 +27,7 @@ $ poetry install
 
 ### Activate Virtual Env
 ```shell
-$ poetry run python lambda_file_distribution/file_distribution_lambda.py
+$ poetry run python lambda_src/create_s3_presigned_url.py
 ```
 
 ### Tracking & Update Package
@@ -42,7 +42,7 @@ $ poetry update --without dev # without dev dependencies mentioned in pyproject.
 > using `poetry add` or manually update [pyproject.toml](./pyproject.toml)
 
 ## AWS Lambda Deployment Using Layers
-Developers generally import libraries and dependencies into their AWS Lambda functions like `requests` being used in [file_distribution_lambda.py](./lambda_file_distribution/file_distribution_lambda.py).
+Developers generally import libraries and dependencies into their AWS Lambda functions like `requests` being used in [file_distribution_lambda.py](lambda_src/create_s3_presigned_url.py).
 While you can zip these dependencies as part of the build and deployment process, in many cases it’s easier to use layers instead.
 Lambda layers provide a convenient and effective way to package code libraries for sharing with Lambda functions.
 Using layers can help reduce the size of uploaded archives and make it faster to deploy your code. As a bonus, since it

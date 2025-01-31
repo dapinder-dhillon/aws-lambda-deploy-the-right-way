@@ -2,7 +2,7 @@
 resource "aws_iam_role" "iam_for_lambda" {
   name = join("-", [
     "role",
-    var.file_distribution_lambda_name,
+    var.create_s3_presigned_url_lambda_name,
   var.environment])
   assume_role_policy = <<EOF
 {
@@ -22,7 +22,7 @@ EOF
   tags = merge(local.common_tags, {
     "Name" = join("-", [
       "role",
-      var.file_distribution_lambda_name,
+      var.create_s3_presigned_url_lambda_name,
     var.environment]), "Description" = var.tag_description
   })
 }
@@ -59,7 +59,7 @@ data "aws_iam_policy_document" "lambda_policy_doc" {
     effect = "Allow"
 
     resources = [
-      aws_lambda_function.file_distribution_function.arn
+      aws_lambda_function.create_s3_presigned_url_function.arn
     ]
 
     actions = [
@@ -84,7 +84,7 @@ data "aws_iam_policy_document" "lambda_policy_doc" {
 resource "aws_iam_role_policy" "lambda_policy" {
   name = join("-", [
     "policy",
-    var.file_distribution_lambda_name,
+    var.create_s3_presigned_url_lambda_name,
   var.environment])
   role   = aws_iam_role.iam_for_lambda.id
   policy = data.aws_iam_policy_document.lambda_policy_doc.json
