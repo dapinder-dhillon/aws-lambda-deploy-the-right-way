@@ -1,4 +1,4 @@
-FROM python:3.8.10-alpine
+FROM python:3.12.10-alpine
 WORKDIR /code
 
 RUN apk add --update --no-cache --virtual .build-deps \

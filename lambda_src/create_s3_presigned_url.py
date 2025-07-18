@@ -1,6 +1,7 @@
+import json
+
 import boto3
 import logging
-import os
 import requests
 import urllib.parse
 from botocore.client import Config
@@ -10,9 +11,10 @@ from botocore.exceptions import ClientError
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
+session = boto3.Session(profile_name="default")
 # AWS Clients
-S3_CLIENT = boto3.client('s3', region_name='eu-west-1', config=Config(signature_version='s3v4'))
-SNS_CLIENT = boto3.client('sns', region_name='eu-west-1')
+S3_CLIENT = session.client('s3', region_name='eu-west-1', config=Config(signature_version='s3v4'))
+SNS_CLIENT = session.client('sns', region_name='eu-west-1')
 
 
 # -----------------------------------------------------------------------------
@@ -38,14 +40,22 @@ def lambda_handler(event, context):
         # Generate and publish the pre-signed URL
         presigned_url = generate_presigned_url(bucket_name, object_key)
         if presigned_url:
-            message_id = publish_to_sns(presigned_url)
-            logger.info(f"Pre-signed URL published to SNS. Message ID: {message_id}")
+            response = post_to_httpbin(presigned_url)
+            logger.info(f"Response from external API: {response.json()}")
         else:
             logger.warning("Failed to generate pre-signed URL.")
 
+        return {
+            'statusCode': 200,
+            'body': json.dumps('Lambda executed successfully!')
+        }
+
     except Exception as e:
-        logger.error(f"Error processing S3 event: {str(e)}", exc_info=True)
-        notify_slack_error(str(e))
+        logger.error(f"Error: {e}")
+        return {
+            'statusCode': 500,
+            'body': json.dumps(f"An error occurred: {str(e)}")
+        }
 
 
 # -----------------------------------------------------------------------------
@@ -77,51 +87,6 @@ def generate_presigned_url(bucket_name, object_name, expiration=604800):
 # -----------------------------------------------------------------------------
 # Publish Message to SNS
 # -----------------------------------------------------------------------------
-def publish_to_sns(message):
-    """
-    Publish a pre-signed URL to an SNS Topic.
-    :param message: Pre-signed URL message
-    :return: Message ID if published successfully, None otherwise
-    """
-    try:
-        sns_topic = os.getenv('TARGET_SNS_TOPIC')
-        if not sns_topic:
-            raise ValueError("Environment variable TARGET_SNS_TOPIC is not set.")
+def post_to_httpbin(presigned_url):
+    return requests.get("https://httpbin.org/get", params={"url": presigned_url})
 
-        response = SNS_CLIENT.publish(TopicArn=sns_topic, Message=message)
-        return response.get('MessageId')
-
-    except (ClientError, ValueError) as e:
-        logger.error(f"Failed to publish message to SNS: {e}")
-        return None
-
-
-# -----------------------------------------------------------------------------
-# Slack Notification for Errors
-# -----------------------------------------------------------------------------
-def notify_slack_error(error_message):
-    """
-    Sends an error notification to Slack.
-    :param error_message: The error message to be sent
-    """
-    try:
-        slack_webhook = os.getenv('SLACK_WEBHOOK_SSM')
-        environment = os.getenv('ENVIRONMENT', 'unknown')
-
-        if not slack_webhook:
-            logger.warning("Slack webhook URL is not set. Skipping Slack notification.")
-            return
-
-        payload = {
-            "text": f"*Error Notification* \n"
-                    f"*Task:* MFT PyLambda Function\n"
-                    f"*Environment:* {environment}\n"
-                    f"*Error:* {error_message}"
-        }
-
-        response = requests.post(slack_webhook, json=payload)
-        response.raise_for_status()
-        logger.info("Slack notification sent successfully.")
-
-    except requests.RequestException as err:
-        logger.error(f"Failed to send Slack notification: {err}")
