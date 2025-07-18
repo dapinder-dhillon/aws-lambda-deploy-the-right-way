@@ -89,4 +89,3 @@ def generate_presigned_url(bucket_name, object_name, expiration=604800):
 # -----------------------------------------------------------------------------
 def post_to_httpbin(presigned_url):
     return requests.get("https://httpbin.org/get", params={"url": presigned_url})
-
