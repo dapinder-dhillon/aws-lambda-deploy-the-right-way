@@ -19,9 +19,8 @@ resource "aws_lambda_function" "create_s3_presigned_url_function" {
   data.aws_lambda_layer_version.create_s3_presigned_url_lambda_dependencies.arn]
   environment {
     variables = {
-      TARGET_SNS_TOPIC  = var.lambda_s3_sns_name
-      ENVIRONMENT       = var.environment
-      SLACK_WEBHOOK_SSM = aws_ssm_parameter.alerts_slack_token.value
+      TARGET_SNS_TOPIC = var.lambda_s3_sns_name
+      ENVIRONMENT      = var.environment
     }
   }
   tags = merge(local.common_tags, {

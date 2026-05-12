@@ -19,7 +19,7 @@ SNS_CLIENT = session.client('sns', region_name='eu-west-1')
 
 # -----------------------------------------------------------------------------
 # This AWS Lambda function listens for S3 events, generates a pre-signed URL for accessing an object, and publishes
-# it to an SNS topic. If any errors occur, it logs the issue and sends a Slack notification.
+# it to an HTTPBin.
 # -----------------------------------------------------------------------------
 def lambda_handler(event, context):
     """ Entry point for the Lambda function. Processes S3 events and generates a pre-signed URL. """

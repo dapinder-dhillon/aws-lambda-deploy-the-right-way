@@ -1,11 +1,11 @@
 [tool.poetry]
 name = "create_presigned_url_lambda"
 version = "0.0.0"
-description = "This AWS Lambda function listens for S3 events, generates a pre-signed URL for accessing an object, and publishes it to an SNS topic. If any errors occur, it logs the issue and sends a Slack notification."
+description = "This AWS Lambda function listens for S3 events, generates a pre-signed URL for accessing an object, and publishes it to a HTTPBin."
 authors = ["https://medium.com/@dhillon.dapinder"]
 readme = "README.md"
 classifiers = [
-    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.12",
     "Operating System :: OS Independent"
 ]
 
